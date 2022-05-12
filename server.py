@@ -6,15 +6,25 @@ from cryptography.fernet import Fernet
 # initialize the app
 app = Flask(__name__)
 
-# generate the key that will be used to encrypt/decrypt.
-key = Fernet.generate_key()
+# grab the key used to encrypt/decrypt or generate a new one if one doesn't exist
+try:
+    with open("key_file.txt", "r") as key_file:
+        key = key_file.readline().encode()
+except FileNotFoundError:
+    key = Fernet.generate_key()
+    with open("key_file.txt", "w") as key_file:
+        key_file.write(key.decode())
 
 
-@app.post('/encrypt')
-def encrypt_string():
+@app.before_request
+def handle_content_type():
     if request.content_type != 'text/plain':
         return jsonify({"Error": "Content type must be text/plain"})
 
+
+@app.route('/encrypt', methods=['POST'])
+def encrypt_string():
+    print("in post")
     byte_str = request.data
     if len(byte_str) > 25:
         return jsonify({"Error": "Too long of a string. String must be less than 25 bytes long"})
@@ -26,11 +36,8 @@ def encrypt_string():
     return enc_str
 
 
-@app.post('/decrypt')
+@app.route('/decrypt', methods=['POST'])
 def decrypt_string():
-    if request.content_type != 'text/plain':
-        return jsonify({"Error": "Content type must be text/plain"})
-
     byte_str = request.data
     f = Fernet(key)
 
