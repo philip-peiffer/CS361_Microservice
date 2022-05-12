@@ -24,7 +24,6 @@ def handle_content_type():
 
 @app.route('/encrypt', methods=['POST'])
 def encrypt_string():
-    print("in post")
     byte_str = request.data
     if len(byte_str) > 25:
         return jsonify({"Error": "Too long of a string. String must be less than 25 bytes long"})
